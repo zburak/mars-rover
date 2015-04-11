@@ -6,7 +6,7 @@ import net.zburak.poc.marsrover.surface.Surface;
 import java.util.List;
 
 /**
- * Created by buraq on 10.04.2015.
+ * Created by buraq
  */
 public interface RoverManager {
 

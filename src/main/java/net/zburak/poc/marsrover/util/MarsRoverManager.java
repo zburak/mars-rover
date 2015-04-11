@@ -27,6 +27,13 @@ public class MarsRoverManager implements RoverManager {
     private Rover marsRover;
     private Plateau plateau;
     private Move move;
+    private PrecedenceManager precedenceManager;
+    private Operations operation;
+
+    public MarsRoverManager(PrecedenceManager precedenceManager) {
+        this.precedenceManager = precedenceManager;
+        operation = Operations.NONE;
+    }
 
     private static Map<String, Command> commandMap = new HashMap<String, Command>(){{
         put("M", new MoveForwardCommand());
@@ -41,19 +48,22 @@ public class MarsRoverManager implements RoverManager {
     @Override
     public void processStringCommands(String command) {
         command = StringUtils.upperCase(command.trim());
-        if (Str2CommandOperations.checkPlateuCommand(command)) {
+        if (Str2CommandOperations.checkPlateuCommand(command) && precedenceManager.initCheck(operation)) {
             plateau = new Plateau(Str2CommandOperations.extractCoordinates(command));
-        } else if(Str2CommandOperations.checkDeploymentCommand(command)) {
+            setOperation(Operations.INIT);
+        } else if(Str2CommandOperations.checkDeploymentCommand(command) && precedenceManager.deploymentCheck(operation)) {
             Coordinate deploymentPoint = Str2CommandOperations.extractCoordinates(command.substring(0, 3));
             move = Str2CommandOperations.extractMove(command.substring(4));
             marsRover = new MarsRover(plateau, deploymentPoint, move);
-        } else if(Str2CommandOperations.checkMoveCommand(command)){
+            setOperation(Operations.DEPLOY);
+        } else if(Str2CommandOperations.checkMoveCommand(command) && precedenceManager.moveCheck(operation)){
             List<Command> commands = generateCommands(command);
             Command multiCommand = new MultiCommand(commands);
             multiCommand.execute(marsRover);
+            setOperation(Operations.MOVE);
         } else {
-            logger.error("Not supported command entered");
-            throw new IllegalArgumentException("Command is not supported: " + command);
+            logger.error("Not supported or low precedence command");
+            throw new IllegalArgumentException("Not supported or low precedence command: " + command);
         }
     }
 
@@ -79,7 +89,6 @@ public class MarsRoverManager implements RoverManager {
         return plateau;
     }
 
-
     /**
      * Generates command objects from string
      *
@@ -96,4 +105,7 @@ public class MarsRoverManager implements RoverManager {
         return cmdList;
     }
 
+    public void setOperation(Operations operation) {
+        this.operation = operation;
+    }
 }

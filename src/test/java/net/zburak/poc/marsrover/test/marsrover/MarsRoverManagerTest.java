@@ -1,12 +1,15 @@
 package net.zburak.poc.marsrover.test.marsrover;
 
-import net.zburak.poc.marsrover.util.MarsRoverManager;
-import net.zburak.poc.marsrover.util.RoverManager;
+import net.zburak.poc.marsrover.util.*;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
+import org.mockito.Matchers;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -19,9 +22,16 @@ public class MarsRoverManagerTest {
 
     private RoverManager marsRoverManager;
 
+    @Mock
+    private PrecedenceManager precedenceManager;
+
     @Before
     public void init(){
-        marsRoverManager = new MarsRoverManager();
+        MockitoAnnotations.initMocks(this);
+        marsRoverManager = new MarsRoverManager(precedenceManager);
+        Mockito.when(precedenceManager.initCheck(Matchers.any(Operations.class))).thenReturn(true);
+        Mockito.when(precedenceManager.deploymentCheck(Matchers.any(Operations.class))).thenReturn(true);
+        Mockito.when(precedenceManager.moveCheck(Matchers.any(Operations.class))).thenReturn(true);
     }
 
     @Test
@@ -40,6 +50,7 @@ public class MarsRoverManagerTest {
 
     @Test
     public void deployAndMoveTest(){
+        marsRoverManager = new MarsRoverManager(new PrecedenceManagerImpl());
         List<String> stringCommands = new LinkedList<String>();
         stringCommands.add("5 5");//init plateu
         stringCommands.add("1 2 N");//deploy rover
